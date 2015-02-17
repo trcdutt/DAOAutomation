@@ -1,0 +1,11 @@
+package daoautomation;
+import java.util.Date;
+import java.lang.Double;
+import java.io.InputStream;
+
+public class **className** implements java.io.Serializable {
+
+**variables**
+
+
+}

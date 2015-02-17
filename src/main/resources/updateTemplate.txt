@@ -1,0 +1,25 @@
+  public **classname** updateValue(final **classname** bean) throws PersistenceException {
+		log.debug("**classname** :: updateValue - Start");
+		try {
+			
+		    log.debug("**classname** :: updateValue - SQL: " + **sql**);
+			log.debug(" ******* Bean Values start  ******* ");
+			
+			logBeanValues(bean);
+			
+			log.debug(" ******* Bean Values end  ******* ");
+			
+		    SqlParameterSource ps = new BeanPropertySqlParameterSource(bean);
+			this.getNamedParameterJdbcTemplate().update(**sql**, ps);
+	
+		} catch (Exception e) {
+		    log.error(e.getMessage(), e);
+		    throw new PersistenceException(e);
+		}
+		log.debug("**classname** :: updateValue - end");		
+		return bean; 
+  }
+
+   public void logBeanValues(final **classname** bean) {
+	**beanlogger**
+   }
