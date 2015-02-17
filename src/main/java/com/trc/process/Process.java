@@ -3,9 +3,12 @@
  */
 package com.trc.process;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Scanner;
@@ -18,7 +21,6 @@ import com.trc.properties.DatabaseProperties;
  * 
  */
 public class Process {
-
 
 	public static void main(String[] args) throws Exception {
 		Scanner scanner = new Scanner(System.in);
@@ -55,26 +57,54 @@ public class Process {
 			StringBuilder variables = new StringBuilder();
 			StringBuilder methods = new StringBuilder();
 			List<String> primarycolumns = TableReader.getTableMetaData(con, tableName).getPrimaryColumns();
-			for (Column column : table.getColumns()) {
-				
-				if (primarycolumns.indexOf(column.getColName()) >= 0) {
-					// Primary key and should be skipped in insert and update
-					
-				}
+			StringBuilder insertQuery = new StringBuilder("public static final String ").append(tblName)
+					.append("_INSERT = ").append("\" INSERT INTO ");
+			StringBuilder insertQueryValues = new StringBuilder(" ) VALUES ( ");
+			StringBuilder updateQuery = new StringBuilder("public static final String ").append(tblName)
+					.append("_UPDATE = ").append("\" UPDATE ");
+			StringBuilder updateQueryValues = new StringBuilder(" set ( ");
+			StringBuilder deleteQuery = new StringBuilder("public static final String ").append(tblName)
+					.append("_DELETE = \"").append(" Delete From ");
+			StringBuilder deleteQueryValues = new StringBuilder(" Where 1=1 ");
+			StringBuilder selectQuery = new StringBuilder("Select  ");
+			StringBuilder selectQueryValues = new StringBuilder(" Where 1=1 ");
 
+			insertQuery.append(tblName).append("( ");
+			updateQuery.append(tblName).append(" ");
+			deleteQuery.append(tblName).append(" ");
+
+			for (Column column : table.getColumns()) {
 				variables.append("private ").append(column.getJavaType()).append(" ").append(column.getVariableName())
 						.append(";\n");
 
-				methods.append("\npublic ").append(column.getJavaType()).append(" ").append(column.getGetMethodName()).append("(){ \n").append("return ")
-						.append(column.getVariableName()).append(";\n }\n");
+				methods.append("\npublic ").append(column.getJavaType()).append(" ").append(column.getGetMethodName())
+						.append("(){ \n").append("return ").append(column.getVariableName()).append(";\n }\n");
 
 				methods.append("\npublic void ").append(column.getSetMethodName()).append("(")
 						.append(column.getJavaType()).append(" ").append(column.getVariableName()).append(")")
 						.append("{ \n").append("this.").append(column.getVariableName()).append("=")
 						.append(column.getVariableName()).append(";\n }\n");
+				if (primarycolumns.indexOf(column.getColName()) >= 0) {
+					// Primary key and should be skipped in insert and update
+					continue;
+
+				}
+				insertQuery.append(column.getColName());
+				insertQueryValues.append(":").append(column.getVariableName());
+				selectQuery.append(column.getColName());
+				updateQuery.append(column.getColName());
+				updateQueryValues.append(" = :").append(column.getVariableName());
+
 			}
 			Bean bean = new Bean();
-			bean.createBeanSource(className,variables,methods);
+			bean.createBeanSource(className, variables, methods);
+
+			insertQuery.append(insertQueryValues).append("\";");;
+			deleteQuery.append(deleteQueryValues).append("\";");;
+			updateQuery.append(updateQueryValues).append("\";");
+			selectQuery.append(tblName).append(" ").append(selectQueryValues).append("\";");;
+
+			createQueryFile(className, insertQuery, updateQuery, deleteQuery, selectQuery);
 			sourceFile.append(insTemplate);
 			sourceFile.append(updTemplate);
 			sourceFile.append(delTemplate);
@@ -82,6 +112,25 @@ public class Process {
 
 	}
 
+	private static void createQueryFile(String className, StringBuilder insertQuery, StringBuilder updateQuery,
+			StringBuilder deleteQuery, StringBuilder selectQuery) throws IOException {
+
+		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
+		File file = new File(dir + "/" + className + "Queries.java");
+		file.delete();
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+		StringBuilder classDeclaration = new StringBuilder();
+		classDeclaration.append("public class ").append (className).append( " { \n");
+		classDeclaration.append(insertQuery).append(updateQuery).append(deleteQuery).append(selectQuery);
+		classDeclaration.append("}");
+		OutputStream os = new FileOutputStream(file);
+		os.write(classDeclaration.toString().getBytes());
+		
+		os.close();
+		
+	}
 	private static StringBuilder createDeleteTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readDeleteTemplate());
@@ -147,7 +196,7 @@ public class Process {
 		while (data.indexOf("**sql**", start) > 0) {
 			start = data.indexOf("**sql**", start);
 			data.delete(start, start + length);
-			data.insert(start, "AllTablesQueries." + queryName);
+			data.insert(start, className + "Queries." + queryName);
 		}
 
 	}

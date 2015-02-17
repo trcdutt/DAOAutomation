@@ -12,4 +12,5 @@ public interface Constants {
 	static final int CLASS_NAME_LENGTH = "**className**".length();
 	static final String VAR_NAME = "**variables**";
 	static final int VAR_NAME_LENGTH = "**variables**".length();
+	static final String INSERT_QUERY = "INSERT INTO ";
 }
