@@ -48,7 +48,7 @@ public class Process {
 		for (String tblName : tables) {
 			Connection con = DatabaseProperties.getDatabaseConnection();
 			Table table = TableReader.getTableMetaData(con, tblName);
-			con.close();
+
 			String className = table.getClassName();
 			StringBuilder insTemplate = createInsertTemplate(className, tblName + "_INSERT");
 			StringBuilder updTemplate = createUpdateTemplate(className, tblName + "_UPDATE");
@@ -57,7 +57,7 @@ public class Process {
 			StringBuilder variables = new StringBuilder();
 			StringBuilder methods = new StringBuilder();
 			List<String> primarycolumns = TableReader.getTableMetaData(con, tableName).getPrimaryColumns();
-			StringBuilder insertQuery = new StringBuilder("public static final String ").append(tblName)
+			StringBuilder insertQuery = new StringBuilder(Constants.STRING_DECLARATION).append(tblName)
 					.append("_INSERT = ").append("\" INSERT INTO ");
 			StringBuilder insertQueryValues = new StringBuilder(" ) VALUES ( ");
 			StringBuilder updateQuery = new StringBuilder("public static final String ").append(tblName)
@@ -66,14 +66,18 @@ public class Process {
 			StringBuilder deleteQuery = new StringBuilder("public static final String ").append(tblName)
 					.append("_DELETE = \"").append(" Delete From ");
 			StringBuilder deleteQueryValues = new StringBuilder(" Where 1=1 ");
-			StringBuilder selectQuery = new StringBuilder("Select  ");
+			StringBuilder selectQuery = new StringBuilder(Constants.STRING_DECLARATION).append(tblName).append(
+					"_SELECT = \"");
+			selectQuery.append(" Select  ");
 			StringBuilder selectQueryValues = new StringBuilder(" Where 1=1 ");
 
 			insertQuery.append(tblName).append("( ");
 			updateQuery.append(tblName).append(" ");
 			deleteQuery.append(tblName).append(" ");
-
+			int i = 0;
+			int size = table.getColumns().size();
 			for (Column column : table.getColumns()) {
+				i++;
 				variables.append("private ").append(column.getJavaType()).append(" ").append(column.getVariableName())
 						.append(";\n");
 
@@ -92,22 +96,31 @@ public class Process {
 				insertQuery.append(column.getColName());
 				insertQueryValues.append(":").append(column.getVariableName());
 				selectQuery.append(column.getColName());
-				updateQuery.append(column.getColName());
+				updateQueryValues.append(column.getColName());
 				updateQueryValues.append(" = :").append(column.getVariableName());
+				if (i != size) {
+					insertQuery.append(", ");
+					selectQuery.append(", ");
+					updateQueryValues.append(",");
+					insertQueryValues.append(",");
+
+				}
 
 			}
 			Bean bean = new Bean();
 			bean.createBeanSource(className, variables, methods);
 
-			insertQuery.append(insertQueryValues).append("\";");;
+			insertQuery.append(insertQueryValues).append(")\";");;
 			deleteQuery.append(deleteQueryValues).append("\";");;
-			updateQuery.append(updateQueryValues).append("\";");
-			selectQuery.append(tblName).append(" ").append(selectQueryValues).append("\";");;
+			updateQuery.append(updateQueryValues).append(")\";");
+			selectQuery.append(" FROM ").append(tblName).append(" ").append(selectQueryValues).append("\";");;
 
 			createQueryFile(className, insertQuery, updateQuery, deleteQuery, selectQuery);
 			sourceFile.append(insTemplate);
 			sourceFile.append(updTemplate);
 			sourceFile.append(delTemplate);
+			con.close();
+
 		}
 
 	}
@@ -122,14 +135,14 @@ public class Process {
 			file.createNewFile();
 		}
 		StringBuilder classDeclaration = new StringBuilder();
-		classDeclaration.append("public class ").append (className).append( " { \n");
+		classDeclaration.append("public class ").append(className).append("Queries").append(" { \n");
 		classDeclaration.append(insertQuery).append(updateQuery).append(deleteQuery).append(selectQuery);
 		classDeclaration.append("}");
 		OutputStream os = new FileOutputStream(file);
 		os.write(classDeclaration.toString().getBytes());
-		
+
 		os.close();
-		
+
 	}
 	private static StringBuilder createDeleteTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
