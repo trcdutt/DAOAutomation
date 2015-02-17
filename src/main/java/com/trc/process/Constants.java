@@ -13,4 +13,6 @@ public interface Constants {
 	static final String VAR_NAME = "**variables**";
 	static final int VAR_NAME_LENGTH = "**variables**".length();
 	static final String STRING_DECLARATION = "public static final String ";
+	static final String KEY_GENERATOR_DECLARATION = "KeyHolder key = new GeneratedKeyHolder();";
+
 }

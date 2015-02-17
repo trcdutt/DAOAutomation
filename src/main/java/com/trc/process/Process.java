@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.slf4j.*;
+
 import com.trc.properties.DatabaseProperties;
 
 /**
@@ -21,6 +23,7 @@ import com.trc.properties.DatabaseProperties;
  * 
  */
 public class Process {
+	private static final Logger Logger = LoggerFactory.getLogger(Process.class);
 
 	public static void main(String[] args) throws Exception {
 		Scanner scanner = new Scanner(System.in);
@@ -44,19 +47,18 @@ public class Process {
 		}
 
 		StringBuilder sourceFile = new StringBuilder(1000);
-		StringBuilder importTemplate = new StringBuilder(readImportTemplate());
 		for (String tblName : tables) {
 			Connection con = DatabaseProperties.getDatabaseConnection();
+			System.out.println("Table Name:" + tblName);
 			Table table = TableReader.getTableMetaData(con, tblName);
 
 			String className = table.getClassName();
 			StringBuilder insTemplate = createInsertTemplate(className, tblName + "_INSERT");
 			StringBuilder updTemplate = createUpdateTemplate(className, tblName + "_UPDATE");
 			StringBuilder delTemplate = createDeleteTemplate(className, tblName + "_DELETE");
-			sourceFile.append(importTemplate);
 			StringBuilder variables = new StringBuilder();
 			StringBuilder methods = new StringBuilder();
-			List<String> primarycolumns = TableReader.getTableMetaData(con, tableName).getPrimaryColumns();
+			List<String> primarycolumns = table.getPrimaryColumns();
 			StringBuilder insertQuery = new StringBuilder(Constants.STRING_DECLARATION).append(tblName)
 					.append("_INSERT = ").append("\" INSERT INTO ");
 			StringBuilder insertQueryValues = new StringBuilder(" ) VALUES ( ");
@@ -90,6 +92,12 @@ public class Process {
 						.append(column.getVariableName()).append(";\n }\n");
 				if (primarycolumns.indexOf(column.getColName()) >= 0) {
 					// Primary key and should be skipped in insert and update
+					if (column.getDataType().equals("String")) {
+						
+					}
+					else {
+						
+					}
 					continue;
 
 				}
@@ -119,6 +127,8 @@ public class Process {
 			sourceFile.append(insTemplate);
 			sourceFile.append(updTemplate);
 			sourceFile.append(delTemplate);
+			createDaoImplFile(className, sourceFile);
+			createDaoFile(className, sourceFile);
 			con.close();
 
 		}
@@ -144,24 +154,69 @@ public class Process {
 		os.close();
 
 	}
+
+	private static void createDaoImplFile(String className, StringBuilder source) throws IOException {
+
+		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
+		File file = new File(dir + "/" + className + "DaoImpl.java");
+		file.delete();
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+		StringBuilder classDeclaration = new StringBuilder();
+		StringBuilder importTemplate = new StringBuilder(readImportTemplate());
+		classDeclaration.append(importTemplate);
+		classDeclaration.append("public class ").append(className).append("DaoImpl implements ").append(className).append("Dao { \n");
+		classDeclaration.append(source);
+		classDeclaration.append("}");
+		OutputStream os = new FileOutputStream(file);
+		os.write(classDeclaration.toString().getBytes());
+
+		os.close();
+
+	}
+
+	private static void createDaoFile(String className, StringBuilder source) throws IOException {
+
+		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
+		File file = new File(dir + "/" + className + "Dao.java");
+		file.delete();
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+		StringBuilder classDeclaration = new StringBuilder();
+		StringBuilder template = new StringBuilder(readInterfaceTemplate());
+		classDeclaration.append(template);
+		replaceClassNameOnly(classDeclaration, className);
+		OutputStream os = new FileOutputStream(file);
+		os.write(classDeclaration.toString().getBytes());
+
+		os.close();
+
+	}
+	private static String readInterfaceTemplate() throws IOException {
+		InputStream is = ClassLoader.getSystemResourceAsStream("interfaceTemplate.txt");
+		return readFile(is);
+	}
+
 	private static StringBuilder createDeleteTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readDeleteTemplate());
-		replaceClassName(updateTemplate, className, queryName);
+		replaceClassAndSql(updateTemplate, className, queryName);
 		return updateTemplate;
 	}
 
 	private static StringBuilder createUpdateTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readUpdateTemplate());
-		replaceClassName(updateTemplate, className, queryName);
+		replaceClassAndSql(updateTemplate, className, queryName);
 		return updateTemplate;
 	}
 
 	private static StringBuilder createInsertTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readInsertTemplate());
-		replaceClassName(updateTemplate, className, queryName);
+		replaceClassAndSql(updateTemplate, className, queryName);
 		return updateTemplate;
 	}
 
@@ -193,8 +248,8 @@ public class Process {
 		InputStream is = ClassLoader.getSystemResourceAsStream("importsTemplate.txt");
 		return readFile(is);
 	}
-
-	public static void replaceClassName(StringBuilder data, String className, String queryName) {
+	
+	public static void replaceClassNameOnly(StringBuilder data, String className) {
 		int start = data.indexOf("**classname**");
 		int length = "**classname**".length();
 
@@ -203,7 +258,12 @@ public class Process {
 			data.delete(start, start + length);
 			data.insert(start, className);
 		}
+	}
 
+	public static void replaceClassAndSql(StringBuilder data, String className, String queryName) {
+		int start = data.indexOf("**classname**");
+		int length = "**classname**".length();
+		replaceClassNameOnly(data, className);
 		start = data.indexOf("**sql**");
 		length = "**sql**".length();
 		while (data.indexOf("**sql**", start) > 0) {

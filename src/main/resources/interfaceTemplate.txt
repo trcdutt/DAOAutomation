@@ -1,0 +1,7 @@
+
+public interface **classname**Dao {
+	public **classname** insertValue(final **classname** bean) throws PersistenceException;
+	public **classname** updateValue(final **classname** bean) throws PersistenceException;
+	public **classname** deleteValue(final **classname** bean) throws PersistenceException;
+
+}

@@ -60,6 +60,7 @@ public class TableReader {
 			rsTable = psTable.executeQuery();
 			while (rsTable != null && rsTable.next()) {
 				allTableNames.add(rsTable.getString("table_name"));
+				System.out.println("Table Name -1 :" + rsTable.getString("table_name"));
 				counter++;
 			}
 

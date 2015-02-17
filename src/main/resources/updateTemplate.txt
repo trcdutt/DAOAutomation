@@ -19,7 +19,3 @@
 		log.debug("**classname** :: updateValue - end");		
 		return bean; 
   }
-
-   public void logBeanValues(final **classname** bean) {
-	**beanlogger**
-   }

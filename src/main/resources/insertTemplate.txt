@@ -6,25 +6,33 @@ public **classname** insertValue(final **classname** bean) throws PersistenceExc
 			log.debug("insertValue - SQL: " + **sql**);
 			
 			SqlParameterSource source = new BeanPropertySqlParameterSource(bean);
-			log.debug(" ******* Bean Values start  ******* ");
-			
-			logBeanValues(bean);
-			
-			log.debug(" ******* Bean Values end  ******* ");			
-			
-			int query = 0;
+			int rowsInserted = 0;
 			KeyHolder key = new GeneratedKeyHolder();
+			**keyholder**
+			rowsInserted = this.getNamedParameterJdbcTemplate().update(**sql**, source**generated**
+			if (rowsInserted == 1) {
+			**setPrimaryKey**
+			/*
+				double primaryKey = key.getKey().doubleValue();
+				 bean.**setKeyValue**(primaryKey);	
+				 */		
+			}
+			else {
+			throw new PersistenceException("insertValue on **classname** failed");
+			}
+			
+			/*
 			if (isGenerated) {
 			
 					
-				query = this.getNamedParameterJdbcTemplate().update(**sql**, source, key, new String[] { "**primarykey**" });
+				rowsInserted = this.getNamedParameterJdbcTemplate().update(**sql**, source, key, new String[] { "**primarykey**" });
 			}
 			else {
-				query = this.getNamedParameterJdbcTemplate().update(**sql**, source);
+				rowsInserted = this.getNamedParameterJdbcTemplate().update(**sql**, source);
 				
 			}
 			
-			if(query == 1) {
+			if(rowsInserted == 1) {
 				if (isGenerated) {
 				double primaryKey = key.getKey().doubleValue();
 				 bean.**setKeyValue**(primaryKey);
@@ -37,6 +45,7 @@ public **classname** insertValue(final **classname** bean) throws PersistenceExc
                         else {
                             throw new PersistenceException("insertValue on **classname** failed");
                         }
+                        */
 		} catch (Exception e) {
 		    log.error(e.getMessage(), e);
 		    throw new PersistenceException(e);
