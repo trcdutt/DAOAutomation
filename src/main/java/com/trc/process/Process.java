@@ -60,16 +60,16 @@ public class Process {
 			StringBuilder insertQuery = new StringBuilder(Constants.STRING_DECLARATION).append(tblName)
 					.append("_INSERT = ").append("\" INSERT INTO ");
 			StringBuilder insertQueryValues = new StringBuilder(" ) VALUES ( ");
-			StringBuilder updateQuery = new StringBuilder("public static final String ").append(tblName)
+			StringBuilder updateQuery = new StringBuilder(Constants.STRING_DECLARATION).append(tblName)
 					.append("_UPDATE = ").append("\" UPDATE ");
 			StringBuilder updateQueryValues = new StringBuilder(" set ( ");
-			StringBuilder deleteQuery = new StringBuilder("public static final String ").append(tblName)
-					.append("_DELETE = \"").append(" Delete From ");
-			StringBuilder deleteQueryValues = new StringBuilder(" Where 1=1 ");
+			StringBuilder deleteQuery = new StringBuilder(Constants.STRING_DECLARATION).append(tblName)
+					.append("_DELETE = \"").append(" DELETE FROM ");
+			StringBuilder deleteQueryValues = new StringBuilder(" WHERE 1=1 ");
 			StringBuilder selectQuery = new StringBuilder(Constants.STRING_DECLARATION).append(tblName).append(
 					"_SELECT = \"");
-			selectQuery.append(" Select  ");
-			StringBuilder selectQueryValues = new StringBuilder(" Where 1=1 ");
+			selectQuery.append(" SELECT  ");
+			StringBuilder selectQueryValues = new StringBuilder(" WHERE 1=1 ");
 
 			insertQuery.append(tblName).append("( ");
 			updateQuery.append(tblName).append(" ");
