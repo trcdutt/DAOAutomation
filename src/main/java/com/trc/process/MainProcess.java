@@ -22,14 +22,17 @@ import com.trc.properties.DatabaseProperties;
  * @author Ramesh Thalathoty
  * 
  */
-public class Process {
-	private static final Logger Logger = LoggerFactory.getLogger(Process.class);
+public class MainProcess {
+	private static final Logger Logger = LoggerFactory.getLogger(MainProcess.class);
+	private static final String dir = (String) DatabaseProperties.getConfigurationProperties().get(Constants.DIR_LOCATION_PROPERTY);
 
 	public static void main(String[] args) throws Exception {
+		InsertTemplateProcessor insertProcessor = new InsertTemplateProcessor();
+		insertProcessor.getTemplateText();
 		Scanner scanner = new Scanner(System.in);
 		System.out.println("Please enter a Table name or press enter to scan all tables:\n");
 		Set<String> tables = null;
-
+		
 		String tableName = scanner.nextLine();
 
 		try {
@@ -138,7 +141,7 @@ public class Process {
 	private static void createQueryFile(String className, StringBuilder insertQuery, StringBuilder updateQuery,
 			StringBuilder deleteQuery, StringBuilder selectQuery) throws IOException {
 
-		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
+//		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
 		File file = new File(dir + "/" + className + "Queries.java");
 		file.delete();
 		if (!file.exists()) {
@@ -157,7 +160,7 @@ public class Process {
 
 	private static void createDaoImplFile(String className, StringBuilder source) throws IOException {
 
-		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
+//		String dir = (String) DatabaseProperties.getConfigurationProperties().get(Constants.DIR_LOCATION_PROPERTY);
 		File file = new File(dir + "/" + className + "DaoImpl.java");
 		file.delete();
 		if (!file.exists()) {
@@ -178,7 +181,7 @@ public class Process {
 
 	private static void createDaoFile(String className, StringBuilder source) throws IOException {
 
-		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
+//		String dir = (String) DatabaseProperties.getConfigurationProperties().get("generatedfilelocation");
 		File file = new File(dir + "/" + className + "Dao.java");
 		file.delete();
 		if (!file.exists()) {
@@ -202,21 +205,21 @@ public class Process {
 	private static StringBuilder createDeleteTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readDeleteTemplate());
-		replaceClassAndSql(updateTemplate, className, queryName);
+		replaceClassAndSql(updateTemplate.toString(), className, queryName);
 		return updateTemplate;
 	}
 
 	private static StringBuilder createUpdateTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readUpdateTemplate());
-		replaceClassAndSql(updateTemplate, className, queryName);
+		replaceClassAndSql(updateTemplate.toString(), className, queryName);
 		return updateTemplate;
 	}
 
 	private static StringBuilder createInsertTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readInsertTemplate());
-		replaceClassAndSql(updateTemplate, className, queryName);
+		replaceClassAndSql(updateTemplate.toString(), className, queryName);
 		return updateTemplate;
 	}
 
@@ -226,8 +229,13 @@ public class Process {
 		while (scan.hasNext()) {
 			sbValue.append(scan.nextLine() + "\n");
 		}
-
+		scan.close();
 		return sbValue.toString();
+	}
+	
+	public static String readTemplate(String templateName) throws IOException {
+		InputStream is = ClassLoader.getSystemResourceAsStream(templateName);
+		return readFile(is);		
 	}
 	public static String readInsertTemplate() throws FileNotFoundException, IOException {
 		InputStream is = ClassLoader.getSystemResourceAsStream("insertTemplate.txt");
@@ -260,7 +268,8 @@ public class Process {
 		}
 	}
 
-	public static void replaceClassAndSql(StringBuilder data, String className, String queryName) {
+	public static String replaceClassAndSql(String source, String className, String queryName) {
+		StringBuilder data = new StringBuilder(source);
 		int start = data.indexOf("**classname**");
 		int length = "**classname**".length();
 		replaceClassNameOnly(data, className);
@@ -271,7 +280,7 @@ public class Process {
 			data.delete(start, start + length);
 			data.insert(start, className + "Queries." + queryName);
 		}
-
+		return data.toString();
 	}
 
 }

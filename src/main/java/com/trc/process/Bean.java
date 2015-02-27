@@ -36,7 +36,7 @@ public class Bean {
 
 	public String readBeanTemplate() throws FileNotFoundException, IOException {
 		InputStream is = ClassLoader.getSystemResourceAsStream("Bean.txt");
-		return Process.readFile(is);
+		return MainProcess.readFile(is);
 	}
 
 	public void createBeanSource(String className, StringBuilder variables, StringBuilder methods)
