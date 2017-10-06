@@ -27,6 +27,7 @@ public class Bean {
 		mappedVariables.put("NUMBER", "Double");
 		mappedVariables.put("CHAR", "String");
 		mappedVariables.put("DATE", "Date");
+		mappedVariables.put("TIMESTAMP(6) WITH LOCAL TIME ZONE", "Date");
 		mappedVariables.put("LONG", "Long");
 		mappedVariables.put("RAW", "byte[]");
 		mappedVariables.put("BLOB", "java.io.InputStream");

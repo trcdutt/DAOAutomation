@@ -205,21 +205,27 @@ public class MainProcess {
 	private static StringBuilder createDeleteTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readDeleteTemplate());
-		replaceClassAndSql(updateTemplate.toString(), className, queryName);
+		String template = replaceClassAndSql(updateTemplate.toString(), className, queryName);
+		updateTemplate.setLength(0);
+		updateTemplate.append(template);
 		return updateTemplate;
 	}
 
 	private static StringBuilder createUpdateTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readUpdateTemplate());
-		replaceClassAndSql(updateTemplate.toString(), className, queryName);
+		String template = replaceClassAndSql(updateTemplate.toString(), className, queryName);
+		updateTemplate.setLength(0);
+		updateTemplate.append(template);		
 		return updateTemplate;
 	}
 
 	private static StringBuilder createInsertTemplate(String className, String queryName) throws FileNotFoundException,
 			IOException {
 		StringBuilder updateTemplate = new StringBuilder(readInsertTemplate());
-		replaceClassAndSql(updateTemplate.toString(), className, queryName);
+		String template = replaceClassAndSql(updateTemplate.toString(), className, queryName);
+		updateTemplate.setLength(0);
+		updateTemplate.append(template);
 		return updateTemplate;
 	}
 
